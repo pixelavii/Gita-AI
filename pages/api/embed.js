@@ -1,5 +1,5 @@
 import fs from "fs";
-import { PDFParse } from "pdf-parse";
+import pdf from "pdf-parse";
 import { HfInference } from "@huggingface/inference";
 import { QdrantClient } from "@qdrant/js-client-rest";
 
@@ -16,10 +16,9 @@ export default async function handler(req, res) {
     console.log("Step 1: Reading PDF...");
     const buffer = fs.readFileSync("./public/Bhagavad-Gita-Hindi.pdf");
     const uint8Array = new Uint8Array(buffer);
-    const data = new PDFParse(uint8Array);
+    const data = await pdf(uint8Array);
     const result = await data.getText();
-
-    await data.destroy();
+    
     const text = result.text;
     console.log("PDF text extracted successfully:" + text.length);
 
