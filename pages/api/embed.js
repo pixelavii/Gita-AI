@@ -1,5 +1,4 @@
 import fs from "fs";
-import pdf from "pdf-parse";
 import { PDFParse } from "pdf-parse";
 import { HfInference } from "@huggingface/inference";
 import { QdrantClient } from "@qdrant/js-client-rest";
