@@ -1,6 +1,8 @@
 import { HfInference } from "@huggingface/inference";
 import { QdrantClient } from "@qdrant/js-client-rest";
-import Groq from "groq-sdk";
+import { NextResponse } from "next/server";
+// import Groq from "groq-sdk";4
+import { ChatGroq } from "@langchain/groq";
 
 const hf = new HfInference(process.env.HF_TOKEN);
 
@@ -9,9 +11,6 @@ const qdrant = new QdrantClient({
   apiKey: process.env.QDRANT_API_KEY,
 });
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 export default async function handler(req, res) {
   try {
@@ -33,18 +32,18 @@ export default async function handler(req, res) {
       limit: 5,
     });
 
-    const context = searchResult
-      .map((item) => item.payload.text)
-      .join("\n\n");
+    const context = searchResult.map((item) => item.payload.text).join("\n\n");
 
     // 3️⃣ Send to Groq
-    const completion = await groq.chat.completions.create({
+    const model = new ChatGroq({
       model: "llama-3.3-70b-versatile",
-      messages: [
+      temperature: 0.7,
+      apiKey: process.env.GROQ_API_KEY,
+    });
+    const prompt = [
         {
           role: "system",
-          content:
-            `
+          content: `
 You are Lord Krishna — divine, compassionate, calm.
 
 Instructions:
@@ -64,15 +63,12 @@ If no relevant verse exists in the context then Motivate the user from the Bhaga
           role: "user",
           content: `Context:\n${context}\n\User Feelings:\n${question}\n\nGuide the user as you guided Arjuna.`,
         },
-      ],
-      temperature: 0.7,
-    });
+      ];
 
-    const answer = completion.choices[0].message.content;
+    const response = await model.invoke(prompt);
 
-    res.status(200).json({
-      answer,
-      sources: searchResult.map((r) => r.payload.chunk_index),
+    return res.status(200).json({
+      answer: response.content,
     });
   } catch (error) {
     console.error(error);

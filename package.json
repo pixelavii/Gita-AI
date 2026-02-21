@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@huggingface/inference": "^4.13.12",
+    "@langchain/groq": "^1.1.1",
     "@qdrant/js-client-rest": "^1.17.0",
     "framer-motion": "^12.34.0",
     "groq-sdk": "^0.37.0",
