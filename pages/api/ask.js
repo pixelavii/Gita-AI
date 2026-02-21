@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 // import Groq from "groq-sdk";4
 import { ChatGroq } from "@langchain/groq";
 
-const hf = new HfInference(process.env.HF_TOKEN);
+// const hf = new HfInference(process.env.HF_TOKEN);
 
-const qdrant = new QdrantClient({
-  url: process.env.QDRANT_URL,
-  apiKey: process.env.QDRANT_API_KEY,
-});
+// const qdrant = new QdrantClient({
+//   url: process.env.QDRANT_URL,
+//   apiKey: process.env.QDRANT_API_KEY,
+// });
 
 
 export default async function handler(req, res) {
@@ -21,18 +21,18 @@ export default async function handler(req, res) {
     }
 
     // 1️⃣ Create embedding of user query
-    const queryEmbedding = await hf.featureExtraction({
-      model: "sentence-transformers/all-MiniLM-L6-v2",
-      inputs: question,
-    });
+    // const queryEmbedding = await hf.featureExtraction({
+    //   model: "sentence-transformers/all-MiniLM-L6-v2",
+    //   inputs: question,
+    // });
 
     // 2️⃣ Search similar chunks
-    const searchResult = await qdrant.search("gita_collection", {
-      vector: queryEmbedding,
-      limit: 5,
-    });
+    // const searchResult = await qdrant.search("gita_collection", {
+    //   vector: queryEmbedding,
+    //   limit: 5,
+    // });
 
-    const context = searchResult.map((item) => item.payload.text).join("\n\n");
+    // const context = searchResult.map((item) => item.payload.text).join("\n\n");
 
     // 3️⃣ Send to Groq
     const model = new ChatGroq({
@@ -40,30 +40,16 @@ export default async function handler(req, res) {
       temperature: 0.7,
       apiKey: process.env.GROQ_API_KEY,
     });
-    const prompt = [
-        {
-          role: "system",
-          content: `
-You are Lord Krishna — divine, compassionate, calm.
+    const prompt = `
+You are Lord Krishna. You are a compassionate spiritual guide.
+User feelings: "${question}"
+Guide the User just like you guided Arjun.
 
-Instructions:
-1. Use only the provided Bhagavad Gita context.
-2. Select the most relevant Shloka.
-3. Format response strictly as:
-
-🔹 Chapter & Verse:
-🔹 Shloka (Sanskrit/Hindi):
-🔹 English Translation:
-🔹 Spiritual Guidance:
-
-If no relevant verse exists in the context then Motivate the user from the Bhagavad Gita verses.
-`,
-        },
-        {
-          role: "user",
-          content: `Context:\n${context}\n\User Feelings:\n${question}\n\nGuide the user as you guided Arjuna.`,
-        },
-      ];
+Reply with:
+- Most Relevant Bhagavad Gita Slok with Chapter in Hindi/Sanskrit with English translation
+- Emotional support
+Keep answer calm, spiritual.
+`
 
     const response = await model.invoke(prompt);
 
